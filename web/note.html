@@ -1,0 +1,207 @@
+﻿<html>
+<head>
+  <meta charset="utf-8" />
+  <link href="favicon.ico" rel="icon">
+  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+  <link href="main.css" rel="stylesheet">
+  <style type="text/css">
+  body {background-image: url(http://www.qqpk.cn/Article/UploadFiles/201112/20111203151001876.jpg);
+        background-repeat:no-repeat;
+        background-attachment:fixed;
+        background-position:bottom center;
+        background-size: 50%
+  </style>
+  <title>日記本</title>
+  </head>
+<body onload="init()"style="font-family:微軟正黑體;">
+    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+      <br/>
+      <audio controls autoplay loop>
+      <source src="http://s80.youmaker.com/other/2016/6-19/mp3574067168fe9d0ec727aa40018fc467ae4b721d6380.mp3"  />
+      </audio>
+  <ol class="carousel-indicators">
+    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+    <li data-target="#myCarousel" data-slide-to="1"></li>
+    <li data-target="#myCarousel" data-slide-to="2"></li>
+    <li data-target="#myCarousel" data-slide-to="4"></li>
+    <li data-target="#myCarousel" data-slide-to="5"></li>
+    <li data-target="#myCarousel" data-slide-to="6"></li>
+  </ol>
+
+    <span class="sr-only">Previous</span>
+    <span class="sr-only">Next</span>
+    
+</div>
+   <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <div class="navbar-header" style="color:purple">
+        <p>把每天的好心情與壞心情都記錄下來吧~!</p>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form navbar-right">
+          <div class="form-group">
+            <input id="filepath" type="hidden" class="form-control" placeholder="filepath" aria-describedby="basic-addon1">
+            <button class="btn btn-success" type="button" onclick="list()">所有記事</button>
+            <button class="btn btn-warning" type="button" onclick="newNote()">新增記事</button>
+          </div>
+        </form>     
+      </div>
+    </div>
+  </nav>
+
+  <div class="alert alert-danger" role="alert">
+  <div id="panelList" class="tab-pane panel">
+  </div>
+  <div id="panelEdit" class="tab-pane panel">
+      <center>
+          日期： <input id="editTitle" type="text" value="">
+
+          <br />
+          <textarea id="editBody" class="form-control" style="width:700px; height:200px;"></textarea>
+          <button class="btn btn-info" onclick="save()">儲存</button>
+      </center> 
+  </div>
+  <div id="panelNew" class="tab-pane panel">
+      <center>
+          日期： <input id="newTitle" type="text" value="" placeholder="西元/月/日">
+
+          <br />
+          <textarea id="newBody" class="form-control" style="width:700px; height:200px" placeholder="今天發生什麼事了呢?"></textarea>
+          <button class="btn btn-info" onclick="add()">新增</button>
+      </center>
+  </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script><br />
+ 
+<footer>
+  
+<script>
+$('.panel').css( "display", "none");
+
+Server = {
+  timeout : 4000
+};
+
+Server.save=function(file, text) {
+  $.ajax({
+    type: "POST",
+    url: "/note/"+file,
+    timeout: this.timeout,
+    data: { text: text }
+  })
+  .done(function(data) {
+    alert( "You Got It!!!");
+  })
+  .fail(function() {
+    alert( "Sorry~~, You're Fail..." );
+  });
+}
+
+Server.load=function(file) {
+  return $.ajax({
+    type: "GET",
+    url: "/note/"+file,
+    timeout: this.timeout,
+    data: {}
+  });
+}
+
+function init() {
+  list();
+}
+
+function switchPanel(name) {
+  $('.panel').css( "display", "none");
+  $('#'+name).css( "display", "block");
+}
+
+function list() {
+  switchPanel('panelList');
+  $.ajax({
+    type: "GET",
+    url: "/list",
+    timeout: this.timeout,
+    data: {}
+  })
+  .done(function(data) {
+    var notes = JSON.parse(data);
+		$('#panelList').empty();
+		$('#panelList').append("<ol>");
+    for (var i in notes) {
+      $('#panelList').append('<li><a href="javascript:edit(\''+notes[i]._id+'\')">'+notes[i].title+"</a></li>")
+    }
+		$('#panelList').append("</ol>");
+  });
+}
+
+var noteID;
+
+function edit(id) {
+  switchPanel('panelEdit');
+	noteID = id;
+  $.ajax({
+    type: "GET",
+    url: "/note/"+id,
+    timeout: this.timeout,
+    data: {}
+  })
+  .done(function(data) {
+    var note = JSON.parse(data);
+    $('#editTitle').val(note.title);
+    $('#editBody').val(note.body);
+  });
+}
+
+function save() {
+  var title = $('#editTitle').val();
+  var body  = $('#editBody').val();
+  $.ajax({
+    type: "POST",
+    url: "/note/"+noteID,
+    timeout: this.timeout,
+    data: {
+      title:title,
+			body:body
+    }
+  })
+  .done(function(data) {
+	  alert('修改成功~!');
+	});
+}
+
+function newNote() {
+  switchPanel('panelNew');
+  $('#editTitle').val('');
+  $('#editBody').val('');
+}
+
+function add() {
+  var title = $('#newTitle').val();
+  var body  = $('#newBody').val();
+  $.ajax({
+    type: "POST",
+    url: "/new",
+    timeout: this.timeout,
+    data: {
+      title:title,
+			body:body
+    }
+  })
+  .done(function(data) {
+	  alert('成功~明天記得也要來記錄一天的心情哦~!');
+		list();
+	});
+}
+
+</script>
+</body>
+</html>
+
